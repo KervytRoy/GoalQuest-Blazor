@@ -1,0 +1,88 @@
+﻿@inject ApiClient.ApiClient WebApiClient
+@inject ISnackbar SnackBar
+
+<MudDialog IsVisible>
+    <TitleContent>
+        @if (Activity is not null && Activity.Id > 0)
+        {
+            @("Update Activity")
+        }
+        else
+        {
+            @("Create Activity")
+        }
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form">
+            <MudTextField MaxLength="80" @bind-Value="name" Label="Activity Name" Required="true" RequiredError="Activity Name is Required" For="@(() => Activity.Name)" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public ApiClient.ActivityDto Activity { get; set; } = new();
+
+    [Parameter]
+    public int GoalId { get; set; }
+
+    string errorText;
+    bool isError;
+    string name;
+    MudForm form;
+    protected override void OnInitialized()
+    {
+        if (Activity.Id > 0 && !string.IsNullOrEmpty(Activity.Name))
+        {
+            name = Activity.Name;
+        }
+    }
+
+    async Task Submit()
+    {
+        await form.Validate();
+        if (form.IsValid)
+        {
+            var activities = await WebApiClient.GetAllActivitiesAsync();
+
+            var existingActivity = activities.FirstOrDefault(a => a.Name == name);
+
+            if (Activity is null || Activity.Id < 1)
+            {
+                if (existingActivity != null)
+                {
+                    SnackBar.Add("The Name used already Exist");
+                    return;
+                }
+                else
+                {
+                    var createActivityRequest = new ApiClient.CreateActivityRequest { Name = name, CreatedDate = DateTime.Now, GoalId = GoalId };
+                    await WebApiClient.CreateActivityAsync(createActivityRequest);
+                    MudDialog.Close(DialogResult.Ok(true));
+                }
+            }
+            else
+            {
+                if (existingActivity != null && existingActivity.Id != Activity.Id)
+                {
+                    SnackBar.Add("The Name used already Exist");
+                    return;
+                }
+                else
+                {
+                    var updateActivityRequest = new ApiClient.UpdateActivityRequest { Id = Activity.Id, Name = name };
+                    await WebApiClient.UpdateActivityAsync(Activity.Id, updateActivityRequest);
+                    MudDialog.Close(DialogResult.Ok(true));
+                }
+            }
+        }
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}

@@ -1,0 +1,85 @@
+﻿@inject ApiClient.ApiClient WebApiClient
+@inject ISnackbar SnackBar
+<MudDialog>
+    <TitleContent>
+        @if (Goal is not null && Goal.Id > 0)
+        {
+            @("Update Goal")
+        }
+        else
+        {
+            @("Create Goal")           
+        }
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form">
+            <MudTextField MaxLength="80" @bind-Value="name" Label="Goal Name" Required="true" RequiredError="Goal Name is Required" For="@(() => Goal.Name)" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public ApiClient.GoalDto Goal { get; set; } = new();
+    string name;
+    string errorText;
+    bool isError;
+
+    MudForm form;
+
+    protected override void OnInitialized()
+    {
+        if (Goal.Id > 0 && !string.IsNullOrEmpty(Goal.Name))
+        {
+            name = Goal.Name;
+        }
+    }
+
+    async Task Submit()
+    {
+        await form.Validate();
+        if (form.IsValid)
+        {
+            var goals = await WebApiClient.GetAllGoalsAsync();
+
+            var existingGoal = goals.FirstOrDefault(g => g.Name == name);
+
+            if (Goal is null || Goal.Id < 1)
+            {
+                if (existingGoal != null)
+                {
+                    SnackBar.Add("The Name used already Exist");
+                    return;
+                }
+                else
+                {
+                    var createGoalRequest = new ApiClient.CreateGoalRequest { Name = name, CreatedDate = DateTime.Now };
+                    await WebApiClient.CreateGoalAsync(createGoalRequest);
+                    MudDialog.Close(DialogResult.Ok(true));
+                }
+            }
+            else
+            {
+                if (existingGoal != null && existingGoal.Id != Goal.Id)
+                {
+                    SnackBar.Add("The Name used already Exist");
+                    return;
+                }
+                else
+                {
+                    var updateGoalRequest = new ApiClient.UpdateGoalRequest { Id = Goal.Id, Name = name };
+                    await WebApiClient.UpdateGoalAsync(Goal.Id, updateGoalRequest);
+                    MudDialog.Close(DialogResult.Ok(true));
+                }
+            }
+        }
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}

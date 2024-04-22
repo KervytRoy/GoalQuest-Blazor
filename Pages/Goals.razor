@@ -1,0 +1,98 @@
+﻿@page "/"
+
+@using GoalQuest.Shared.Components
+@inject ApiClient.ApiClient WebApiClient
+@inject IDialogService DialogService
+@inject ISnackbar SnackBar
+
+<div style="display: flex; justify-content: space-between;">
+    <MudCard Style="width:25%;">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Align="Align.Left" Typo="Typo.h6">Goals Control</MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <MudTooltip Text="Create Goal">
+                    <MudFab Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="CreateGoal" />
+                </MudTooltip>
+            </CardHeaderActions>
+        </MudCardHeader>
+    </MudCard>
+    <MudCard Style="background-color:#594ae2; width:75%;">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Align="Align.Center" Style="color:white" Typo="Typo.h5">Manage Goal Activities</MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+            </CardHeaderActions>
+
+        </MudCardHeader>
+    </MudCard>
+</div>
+<MudGrid Style="width:100%">
+    <MudItem sm="3">
+        <MudDrawer Width="25%" Color="Color.Primary" Open="true">
+            <GoalList OnDeleteGoal="OnDeleteGoal" OnEditGoal="UpdateGoal" OnViewGoalDeatils="OnViewGoalDeatils" Goals="goals"></GoalList>
+        </MudDrawer>
+    </MudItem>
+    <MudItem sm="9">
+        @if (selectedGoal)
+        {
+            <MudTable Class="ma-10" ServerData="@(new Func<TableState, Task<TableData<ApiClient.ActivityDto>>>(ServerReload))"
+                      Dense="true" Hover="true" @ref="table">
+                <ToolBarContent>
+                    <MudTooltip Text="Create Activity">
+                        <MudFab OnClick="@(() => CreateActivity())" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" />
+                    </MudTooltip>
+                    <MudTooltip Text="Complete Activity">
+                        <MudFab OnClick="CompleteActivity" Class="ml-3" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddTask" />
+                    </MudTooltip>
+                    <MudTooltip Text="Delete Activity">
+                        <MudFab OnClick="DeleteActivities" Class="ml-3" Size="Size.Small" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" />
+                    </MudTooltip>
+                    <MudSpacer />
+                    <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh></MudTh>
+                    <MudTh><MudTableSortLabel SortLabel="name_field" T="ApiClient.ActivityDto">Name</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortLabel="date_field" T="ApiClient.ActivityDto">Created Date</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortLabel="status_field" T="ApiClient.ActivityDto">Status</MudTableSortLabel></MudTh>
+                    <MudTh>Important</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>
+                        <MudCheckBox @bind-Value="context.Selected"></MudCheckBox>
+                    </MudTd>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd DataLabel="Created Date">@context.CreatedDate.Date.ToShortDateString()</MudTd>
+                    <MudTd DataLabel="Status">@((context.Status == 1) ? "Open" : (context.Status == 2) ? "Completed" : "Unknown")</MudTd>
+                    <MudTd>
+                        <input type="checkbox"  checked="@context.Important" @onchange="(e) => HandleCheckBoxChange((bool)e.Value, context.Id)" />
+                    </MudTd>
+                    <MudTd DataLabel="Actions">
+                        <MudButton OnClick="@(() => EditActivity(context))" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Edit">Edit</MudButton>
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText>No matching records found</MudText>
+                </NoRecordsContent>
+                <LoadingContent>
+                    <MudText>Loading...</MudText>
+                </LoadingContent>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+
+        }
+        else
+        {
+            <MudItem Class="mt-10" Style="text-align:center">
+                <MudChip Color="Color.Primary">Select Goal Details</MudChip>
+            </MudItem>
+        }
+    </MudItem>
+</MudGrid>

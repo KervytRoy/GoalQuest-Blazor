@@ -1,0 +1,42 @@
+﻿@inject ApiClient.ApiClient WebApiClient
+<MudDialog>
+    <TitleContent>
+        Delete Confirmation
+    </TitleContent>
+    <DialogContent>
+        <MudText>
+            Are you sure you want to delete @(ToDeleteElement)
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public string ToDeleteElement { get; set; }
+
+    [Parameter]
+    public ApiClient.GoalDto Goal { get; set; }
+
+    [Parameter]
+    public ApiClient.ActivityDto Activity { get; set; }
+
+    async Task Submit()
+    {
+        if (Goal is not null && Goal.Id > 0)
+        {
+            await WebApiClient.DeleteGoalAsync(Goal.Id);
+            MudDialog.Close(DialogResult.Ok(true));
+        }else
+        {
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}

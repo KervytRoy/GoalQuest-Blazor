@@ -1,0 +1,47 @@
+﻿@using ApiClient
+@inject NavigationManager NavigationManager
+@inject ApiClient WebApiClient
+@if (Goals is not null)
+{
+    @foreach (var goal in Goals)
+    {
+        var totalActivities = goal.Activities.Count;
+        var completedActivities = goal.Activities.Count(a => a.Status == 2);
+        var progress = totalActivities > 0 ? Math.Round((double)completedActivities / totalActivities * 100, 2) : 0;
+
+        <div style="margin: 16px; width: 97%;">
+            <MudCard Style="width:95%; height:100%">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Align="Align.Left" Typo="Typo.h6">@goal.Name</MudText>
+                        <MudText Align="Align.Left">@goal.CreatedDate.Date.ToShortDateString()</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudTooltip Text="View Activities">
+                            <MudIconButton OnClick="@(() => ViewGoalDetails(goal.Id))" Icon="@Icons.Material.Filled.RemoveRedEye"></MudIconButton>
+                        </MudTooltip>
+                        <MudTooltip Text="Edit">
+                            <MudIconButton OnClick="@(() => EditGoal(goal))" Icon="@Icons.Material.Filled.Edit"></MudIconButton>
+                        </MudTooltip>
+                        <MudTooltip Text="Delete">
+                            <MudIconButton OnClick="@(() => DeleteGoal(goal))" Icon="@Icons.Material.Filled.Delete"></MudIconButton>
+                        </MudTooltip>
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardActions>
+                    <MudGrid>
+                        <MudItem sm="9">
+                            <MudText>Completed Tasks: @completedActivities/@totalActivities</MudText>
+                        </MudItem>
+                        <MudItem Style="text-align:right" sm="3">
+                            <MudText>@progress%</MudText>
+                        </MudItem>
+                        <MudItem sm="12">
+                            <MudProgressLinear Color="Color.Info" Size="Size.Medium" Value="@progress" Class="my-7" />
+                        </MudItem>
+                    </MudGrid>
+                </MudCardActions>
+            </MudCard>
+        </div>
+    }
+}
