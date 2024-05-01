@@ -12,7 +12,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
 // Registra ApiClient
-builder.Services.AddScoped(sp => new ApiClient.ApiClient("https://localhost:7003/", sp.GetRequiredService<HttpClient>()));
+builder.Services.AddScoped(sp => new ApiClient.ApiClient("https://webapigoalquest.azurewebsites.net/", sp.GetRequiredService<HttpClient>()));
 
 builder.Services.AddMudServices();
 await builder.Build().RunAsync();
